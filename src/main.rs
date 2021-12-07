@@ -38,6 +38,16 @@ fn main()
         }
     }
 
+    // Check if the folder exists
+    let mut extractPath = currentDir.clone();
+    extractPath.push("renderGeneratedScripts");
+    let dirExists: bool = extractPath.is_dir();
+    if !dirExists
+    {
+        fs::create_dir_all(&extractPath).unwrap();
+    }
+
+
     //Figure out how to divide the animations based on nScripts.
     if config.nScripts == 1 {
         createScript(&animations, &currentDir, &config, 0);
