@@ -40,7 +40,7 @@ fn main()
 
     //Figure out how to divide the animations based on nScripts.
     if config.nScripts == 1 {
-        createScript(&animations, currentDir, &config, 0);
+        createScript(&animations, &currentDir, &config, 0);
     }
     else
     {
@@ -55,12 +55,12 @@ fn main()
             if remainder != 0 && j == n-1 {
                 let sliceRange = a..;
                 let animationSlice = &animations[sliceRange];
-                createScript(animationSlice, currentDir.clone(), &config, j as u8);
+                createScript(animationSlice, &currentDir, &config, j as u8);
             }
             else {
                 let sliceRange = a..b;
                 let animationSlice = &animations[sliceRange];
-                createScript(animationSlice, currentDir.clone(), &config, j as u8);
+                createScript(animationSlice, &currentDir, &config, j as u8);
             }
         }
     }
@@ -72,7 +72,6 @@ struct Config {
     animFile: String,
     scriptFile: String,
 }
-
 impl Config {
     fn new(args: &[String]) -> Result<Config, String> {
         if args.len() < 4 {
@@ -89,7 +88,7 @@ impl Config {
 }
 
 
-fn createScript(animations: &[String], currentDir: std::path::PathBuf, config: &Config, nScript: u8)
+fn createScript(animations: &[String], currentDir: &std::path::PathBuf, config: &Config, nScript: u8)
 {
     // Create header text for python script
     let mut header = String::from("import os\nimport sys\nscriptpath = \"");
@@ -106,7 +105,7 @@ fn createScript(animations: &[String], currentDir: std::path::PathBuf, config: &
     let scriptBody = fs::read_to_string(scriptFilePath)
         .expect("Something went wrong reading the file");
 
-    
+    // Add animations to the script
     let mut animArray = String::new();
     for anim in animations {
         // println!("{}", anim);
@@ -115,12 +114,15 @@ fn createScript(animations: &[String], currentDir: std::path::PathBuf, config: &
     }
     animArray.push_str("]\n\n");
     
+    let generatedScript = header + &animArray + &scriptBody;
 
-    let generatedScript = header.clone() + &animArray + &scriptBody;
 
     // Save script to file
-    let scriptFilename = config.scriptFile.clone();
-    let scriptFile = format!("{}", scriptFilename.replace(".py", &format!("{}.py", nScript)));
+    let scriptFilename = &config.scriptFile;
+    let scriptFilename = scriptFilename.replace("unified.py", &format!("{}", &config.animFile));
+    let scriptFilename = scriptFilename.replace(".txt", &format!("{}.py", nScript));
+
+    let scriptFile = format!("renderGeneratedScripts\\{}", scriptFilename);
     let mut output = fs::File::create(scriptFile).unwrap();
-    write!(output, "{}", generatedScript);
+    write!(output, "{}", generatedScript).unwrap();
 }
